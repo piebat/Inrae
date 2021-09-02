@@ -1,0 +1,44 @@
+{
+   "en_1":{
+      "source_sensor":"EndNode",
+      "avg_soil_moisture_30":84,
+      "avg_soil_moisture_60":101,
+      "timestamp":"04-21-2020 00:01"
+   },
+   "sn_1":{
+      "source_sensor":"SinkNode",
+      "max_temperature":20,
+      "min_temperature":8,
+      "sum_rain":2,
+      "irrigate":true,
+      "timestamp":"04-21-2020 00:01"
+   },
+   "en_2":{
+      "source_sensor":"EndNode",
+      "avg_soil_moisture_30":95,
+      "avg_soil_moisture_60":105,
+      "timestamp":"04-22-2020 00:01"
+   },
+   "sn_2":{
+      "source_sensor":"SinkNode",
+      "max_temperature":16,
+      "min_temperature":10,
+      "sum_rain":14,
+      "irrigate":false,
+      "timestamp":"04-22-2020 00:01"
+   },
+   "en_3":{
+      "source_sensor":"EndNode",
+      "avg_soil_moisture_30":120,
+      "avg_soil_moisture_60":110,
+      "timestamp":"04-23-2020 00:02"
+   },
+   "sn_3":{
+      "source_sensor":"SinkNode",
+      "max_temperature":20,
+      "min_temperature":9,
+      "sum_rain":20,
+      "irrigate":false,
+      "timestamp":"04-23-2020 00:02"
+   }
+}
