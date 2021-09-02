@@ -24,7 +24,7 @@ let sat = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?a
     id: 'mapbox/satellite-v9',
     tileSize: 512,
     zoomOffset: -1,
-    accessToken: 'pk.eyJ1IjoicGllYmF0IiwiYSI6ImNrbTlkNGQxeDE0bjEydm16bGw4bzF5NG0ifQ.oytwdA8i5yX6ErDHRRj-zw'
+    accessToken: '<USE your TOKEN>'
 });
 
 //OpenStreetMap
