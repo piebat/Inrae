@@ -1,3 +1,4 @@
+const MapboxToken = "<SET your Yoken>";
 
 google.charts.load('current', {'packages':['gauge','line','controls','corechart','timeline','gantt']});
 google.charts.setOnLoadCallback(drawChart);
@@ -16,6 +17,7 @@ var data2
 let chart2
 let options2
 let chartOk=false;
+let alerts = 0;
 
 //mapbox satelite
 let sat = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
@@ -24,7 +26,7 @@ let sat = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?a
     id: 'mapbox/satellite-v9',
     tileSize: 512,
     zoomOffset: -1,
-    accessToken: '<USE your TOKEN>'
+    accessToken: MapboxToken
 });
 
 //OpenStreetMap
@@ -127,6 +129,13 @@ if(typeof(EventSource) !== "undefined") {
       //drawGantt();
       // chart3.draw(data2,options3);
         } // if chartok
+  })
+
+  source.addEventListener("kafka_alert" ,function(event) {
+    alerts=alerts + 1
+    $("#nAlerts").html(alerts);
+    $("#btn_alerts").css("background-color","red");
+    addMsgs(event.data);
   })
 
   source.addEventListener("pos" ,function(event) {
@@ -353,4 +362,11 @@ function drawGantt() {
   });
 
   chartG.draw(data, optionsG);
+}
+
+function resetAlerts() {
+  alerts = 0;
+  $("#nAlerts").html("none");
+  $("#btn_alerts").css("background-color","green");
+  $("#msgs").empty();
 }

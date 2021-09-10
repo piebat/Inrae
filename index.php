@@ -7,7 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="x-ua-compatible" content="ie=edge, chrome=1" />
     <title>INRAE demo</title>
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 <link rel="stylesheet" href="./css/leaflet.contextmenu.css"/>
@@ -30,8 +29,8 @@
 <main>
 <div class="container-fluid" style="height: 100%; width: 100%;"> 
     <div class="d-grid gap-2 d-md-block  sticky-top">
-        <button type="button" class=" btn btn-success float-end">
-            Alerts <span class="badge rounded-pill bg-secondary">none</span>
+        <button id="btn_alerts" type="button" class=" btn btn-success float-end" onclick="resetAlerts()">
+            Alerts <span id="nAlerts" class="badge rounded-pill bg-secondary">none</span>
         </button>
         <div id="errmsg" class="bg-danger" ></div>
     </div>
