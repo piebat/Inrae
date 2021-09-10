@@ -44,7 +44,11 @@ $gr= "group1"+ rand(1,100);
 $conf->set('group.id', $gr);
 
 // Initial list of Kafka brokers
+<<<<<<< HEAD
 $conf->set('metadata.broker.list', $KafkaServer);
+=======
+$conf->set('metadata.broker.list', 'kafka.com');
+>>>>>>> 93553671b89143c1a23846da04495809677a4f87
 
 // Set where to start consuming messages when there is no initial offset in
 // offset store or the desired offset is out of range.
