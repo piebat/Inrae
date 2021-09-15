@@ -1,0 +1,112 @@
+<head>
+    <style> body { margin: 0; } </style>
+  
+    <script src="//unpkg.com/three"></script>
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <script src="//unpkg.com/three-spritetext"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+   <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+  <style>
+    #mapid {
+      height: 500px;
+    }
+  </style>
+
+  </head>
+  
+  <body>
+    <div id="mapid"></div>
+    <div class="container">
+      <div id="3d-graph"></div>
+    </div>
+    
+  
+    <script>
+       var mymap = L.map('mapid').setView([39.309993, 16.250193], 13);
+      // Random tree
+      const N = 30;
+      var sll = [{id:1, lat:39.309993, lng: 16.250193, label: 'a'}, {id:2, lat:38.95933332688675, lng: 16.28756668990772, label: 'b'}];
+      const gData = {
+        nodes: sll,
+        links: [{source:1, target:2, weight:3, imprese:30}]
+      };
+
+
+      console.log(sll);
+      const graph = ForceGraph3D()
+        (document.getElementById('3d-graph'))
+          .linkWidth('weight')
+          .nodeAutoColorBy('label')
+          .linkThreeObjectExtend(true)
+          .linkThreeObject(link => {
+            // extend link with text sprite
+            const sprite = new SpriteText(`${link.imprese}`);
+            sprite.color = 'lightgrey';
+            sprite.textHeight = 1.5;
+            return sprite;
+          })
+          .onNodeClick(node => {
+            // Aim at node from outside it
+            const distance = 100;
+            const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+            graph.cameraPosition(
+              { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
+              node, // lookAt ({ x, y, z })
+              3000  // ms transition duration
+              );
+              mymap.panTo(L.latLng(node));
+          })
+          .graphData(gData);
+
+
+      
+    </script>
+
+    <script>
+    
+   
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 18,
+      id: 'mapbox/streets-v11',
+      tileSize: 512,
+      zoomOffset: -1,
+      accessToken: 'pk.eyJ1IjoicGllYmF0IiwiYSI6ImNrbTlkNGQxeDE0bjEydm16bGw4bzF5NG0ifQ.oytwdA8i5yX6ErDHRRj-zw'
+    }).addTo(mymap);
+    sll.forEach(element => {
+      L.marker([element.lat,element.lng])
+      .on('click', onMarkerClick)
+      .addTo(mymap);
+    });
+
+    {% comment %} 
+    var geojsonFeature = Object.assign({},{{geoj|safe}})
+    L.geoJSON(geojsonFeature).addTo(mymap);
+
+    var shapeFeature = Object.assign({},{{shp|safe}})
+    L.shapefile(shapeFeature).addTo(mymap);  
+ {% endcomment %}
+
+    function onMarkerClick(e){
+      var node={};
+      gData.nodes.forEach(ele => {
+        if ( L.latLng(ele).equals(e.latlng)) {
+          node = ele;
+        }
+      });
+      const distance = 100;
+      const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+      graph.cameraPosition(
+        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
+        node, // lookAt ({ x, y, z })
+        3000  // ms transition duration
+        );
+    };
+    </script>
+  </body>

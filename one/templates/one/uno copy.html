@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <script src="//unpkg.com/three"></script>
+    <script src="//unpkg.com/three-spritetext"></script>
+    <script src="https://unpkg.com/neo4j-driver"></script>
+    <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+    
+  
+    <title>PRIN 2020 Test</title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">PRIN</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <!-- <li class="nav-item">
+                <a class="nav-link" href="#">Link</a>
+              </li> -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Operazioni su DB
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item" href="{% url 'one:delete' %}">Pulisci Database</a></li>
+                  <!-- <li><a class="dropdown-item" href="/one/delete/">Pulisci Database</a></li> -->
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" onclick="popolaDb()">Popola il Database</a></li>
+                </ul>
+              </li>
+            </ul>
+            <span class="nav-item" style='color:green'> Collegamenti con minimo </span>
+            <form class="d-flex">
+              <input class="form-control me-2" type="text" placeholder="aziende" aria-label="Filtra">
+              <button class="btn btn-outline-success" type="submit">Filtra</button> 
+            </form>
+          </div>
+        </div>
+      </nav>
+
+
+    <div class="container-fluid">
+        <h1 id="titolo">{{titolo}}</h1>
+        <input type="checkbox" class="btn-check" id="btn-check" autocomplete="off" onclick="Toggle_Testo()">
+        <label id="btn-check-label" class="btn btn-primary" for="btn-check">Testo</label>
+        <hr>
+        <div  class="d-flex justify-content-center">
+            <div id="spinner" class="spinner-border text-success" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        {% block content %}
+        {% if filtro >= 0 %}
+        <h5>Filtrata per <span id='filtro'>{{filtro}}</span></h5>
+        {% endif %}
+        {% if sll_list %}
+        <h2>SLL List</h2>
+        <ul>
+            {% for sll in sll_list %}
+            <li>
+                {{ sll.code }} {{sll.name}}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %} 
+        {% endblock %}
+        <div class="card">
+          <div class="card-body">
+            <div id="details" class="card-text"></div>
+          </div>
+        </div>
+        <div class="container-fluid" style="padding-right: 10px;">
+          <div id="3d-graph"  style=" background-color: black;"></div>
+        </div>
+    </div>
+    <script>
+
+      var testo = false;
+      Grafo();
+
+      function Toggle_Testo() {
+        testo = ! testo;
+        if (testo) {
+          $('#btn-check-label').text("Sfere");
+        }else {
+          $('#btn-check-label').text("Testo");
+        }
+        Grafo();
+      }
+      function Grafo() {
+        $("#spinner").hide()
+      const elem = document.getElementById('3d-graph');
+      var fil = 10 //document.getElementById('filtro').innerText;
+      const driver = neo4j.driver("bolt://10.10.1.213", neo4j.auth.basic("neo4j", "stupidoFlanders"),{encrypted: false});
+      const session = driver.session({database:"neo4j"});
+      const start = new Date()
+      session
+      .run('MATCH (n)-[r:contiene]->(m) WHERE r.imprese >= '+fil+' RETURN { id: id(n), label:head(labels(n)), caption:n.name } as source, { id: id(m), label:head(labels(m)), caption:m.code } as target, { weight:log(r.imprese)/2, type:type(r), imprese: r.imprese} as rel LIMIT $limit', {limit: neo4j.int(5000)})
+      .then(function (result) {
+        const nodes = {}
+        const links = result.records.map(r => { 
+	       var source = r.get('source');source.id = source.id.toNumber();
+           nodes[source.id] = source;
+	       var target = r.get('target');target.id = target.id.toNumber();
+           nodes[target.id] = target;
+           var rel = r.get('rel');
+	       return Object.assign({source:source.id,target:target.id}, rel);
+	    });
+        session.close();
+
+        
+        // console.log(links.length+" links loaded in "+(new Date()-start)+" ms.")
+        const gData = { nodes: Object.values(nodes), links: links}
+        // console.log(gData);
+        const Graph = ForceGraph3D()(elem)
+                      .graphData(gData)
+                      .nodeAutoColorBy('label')
+                      .nodeVal('size')
+                      .linkAutoColorBy('type')
+                      .linkWidth('weight')
+                      .nodeLabel(node => `${node.label}: ${node.caption}`)
+                      .onNodeHover(node => elem.style.cursor = node ? 'pointer' : null)
+                      .onNodeDragEnd(node => {
+                        node.fx = node.x;
+                        node.fy = node.y;
+                        node.fz = node.z;
+                      })
+                      .linkThreeObjectExtend(true)
+                      .onNodeClick(node => {
+                        $('#details').text(node.label + ' ' + node.caption);
+                        // Aim at node from outside it
+                        const distance = 40;
+                        const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+                        Graph.cameraPosition(
+                          { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
+                          node, // lookAt ({ x, y, z })
+                          3000  // ms transition duration
+                          );
+                      });
+                      if (testo) {
+                      Graph.linkThreeObject(link => {
+                        // extend link with text sprite
+                        const sprite = new SpriteText(`${link.imprese}`);
+                        sprite.color = 'lightgrey';
+                        sprite.textHeight = 1.5;
+                        return sprite;
+                      })
+                      .linkPositionUpdate((sprite, { start, end }) => {
+                          const middlePos = Object.assign(...['x', 'y', 'z'].map(c => ({
+                          [c]: start[c] + (end[c] - start[c]) / 2 // calc middle point
+                        })))
+                        Object.assign(sprite.position, middlePos)
+                      });
+                    };
+                      if (testo) {
+                        Graph.nodeThreeObject(node => {
+                        const sprite = new SpriteText(node.caption);
+                        sprite.material.depthWrite = false; // make sprite background transparent
+                        sprite.color = node.color;
+                        sprite.textHeight = 8;
+                        return sprite;
+                      });
+                    };
+
+                      Graph.d3Force('charge').strength(-120);
+
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+
+      }
+  </script>
+  <script>
+    function popolaDb() {
+        $("#spinner").show();
+        window.location.href="{% url 'one:populate' %}";
+    }
+    $( "form" ).submit(function( event ) {
+     $("#spinner").show();
+     fil = parseInt($( "input" ).first().val());
+     if (isNaN(fil)) {
+        alert("deve Essere un Intero maggiore uguale a zero")
+     } else
+      {
+        // $( "span" ).text( fil ).show().fadeOut( 1000 );
+        window.location.href="/one/read_node/"+fil+"/"
+     } 
+     event.preventDefault();
+});
+  </script>
+</body>
+</html>
